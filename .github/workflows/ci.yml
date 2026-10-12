@@ -1,0 +1,17 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test-and-eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13", cache: pip}
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+      - name: Eval suite (mock LLM, deterministic judge)
+        run: python -m evals.run --min-pass-rate 0.9
+      - run: cat evals/results/report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with: {name: eval-results, path: evals/results/}
+      - run: docker build -t receptionist .
