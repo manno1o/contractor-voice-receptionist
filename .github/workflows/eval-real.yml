@@ -1,0 +1,16 @@
+name: eval-real-llm
+on:
+  workflow_dispatch:
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - run: pip install -r requirements.txt
+      - run: python -m evals.run --llm anthropic --judge anthropic --caller anthropic --min-pass-rate 0.85
+      - if: always()
+        run: cat evals/results/report.md >> "$GITHUB_STEP_SUMMARY"
